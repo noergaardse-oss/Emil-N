@@ -23,11 +23,6 @@ export default function LandingPage() {
 
   return (
     <div className="flex flex-col items-center justify-center py-12">
-      <img 
-        src="/logo.png" 
-        alt="Silkeborg Volleyball Logo" 
-        className="w-48 h-48 mb-8 object-contain"
-      />
       <h1 className="text-5xl sm:text-6xl font-extrabold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-4 leading-normal text-center">
         Silkeborg Volleyball
       </h1>
