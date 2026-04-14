@@ -1,0 +1,117 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: games
+    // Document ID: auto-generated
+    // Fields:
+    //   - team: string (required, 'Jyllandsserie' or '2.division')
+    //   - date: timestamp (required)
+    //   - opponent: string (required, max 100 chars)
+    //   - location: string (required, max 100 chars)
+    //   - createdAt: timestamp (required, immutable)
+    //
+    // Collection: games/{gameId}/signups
+    // Document ID: auto-generated
+    // Fields:
+    //   - playerName: string (required, max 50 chars)
+    //   - status: string (required, 'in' or 'out')
+    //   - createdAt: timestamp (required, immutable)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && request.auth.token.email == "noergaard.se@gmail.com" && request.auth.token.email_verified == true;
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function validStringLength(field, minLen, maxLen) {
+      return request.resource.data[field] is string &&
+        request.resource.data[field].size() >= minLen &&
+        request.resource.data[field].size() <= maxLen;
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+
+    function isValidGame() {
+      return hasOnlyAllowedFields(['team', 'date', 'opponent', 'location', 'createdAt']) &&
+             hasRequiredFields(['team', 'date', 'opponent', 'location', 'createdAt']) &&
+             request.resource.data.team in ['Jyllandsserie', '2.division'] &&
+             request.resource.data.date is timestamp &&
+             validStringLength('opponent', 1, 100) &&
+             validStringLength('location', 1, 100) &&
+             request.resource.data.createdAt is timestamp;
+    }
+
+    function isValidSignup() {
+      return hasOnlyAllowedFields(['playerName', 'status', 'createdAt', 'comment']) &&
+             hasRequiredFields(['playerName', 'status', 'createdAt']) &&
+             validStringLength('playerName', 1, 50) &&
+             (!('comment' in request.resource.data) || validStringLength('comment', 0, 200)) &&
+             request.resource.data.status in ['in', 'out'] &&
+             request.resource.data.createdAt is timestamp;
+    }
+
+    function isValidSettings() {
+      return hasOnlyAllowedFields(['team1Name', 'team2Name']) &&
+             hasRequiredFields(['team1Name', 'team2Name']) &&
+             validStringLength('team1Name', 1, 50) &&
+             validStringLength('team2Name', 1, 50);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /settings/{settingId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidSettings();
+    }
+
+    match /games/{gameId} {
+      // Anyone can read the games (publicly visible doodle)
+      allow read: if true;
+      
+      // Only admin can create, update, or delete games
+      allow create: if isAdmin() && isValidGame();
+      allow update: if isAdmin() && isValidGame() && request.resource.data.createdAt == resource.data.createdAt;
+      allow delete: if isAdmin();
+
+      match /signups/{signupId} {
+        // Anyone can read signups
+        allow read: if true;
+        
+        // Anyone can create a signup (it's a public doodle)
+        allow create: if isValidSignup();
+        
+        // Anyone can update a signup (to change status or fix name)
+        allow update: if isValidSignup() && request.resource.data.createdAt == resource.data.createdAt;
+        
+        // Anyone can delete signups
+        allow delete: if true;
+      }
+    }
+  }
+}

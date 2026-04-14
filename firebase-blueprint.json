@@ -1,0 +1,97 @@
+{
+  "entities": {
+    "Game": {
+      "title": "Game",
+      "description": "A volleyball game event.",
+      "type": "object",
+      "properties": {
+        "team": {
+          "type": "string",
+          "enum": ["Jyllandsserie", "2.division"],
+          "description": "The team playing the game."
+        },
+        "date": {
+          "type": "string",
+          "format": "date-time",
+          "description": "The date and time of the game."
+        },
+        "opponent": {
+          "type": "string",
+          "description": "The opposing team."
+        },
+        "location": {
+          "type": "string",
+          "description": "The location of the game."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the game was created."
+        }
+      },
+      "required": ["team", "date", "opponent", "location", "createdAt"]
+    },
+    "Signup": {
+      "title": "Signup",
+      "description": "A player's signup for a game.",
+      "type": "object",
+      "properties": {
+        "playerName": {
+          "type": "string",
+          "description": "The name of the player."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["in", "out"],
+          "description": "Whether the player is participating."
+        },
+        "comment": {
+          "type": "string",
+          "description": "Optional comment for the signup."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the signup was created."
+        }
+      },
+      "required": ["playerName", "status", "createdAt"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "Global application settings.",
+      "type": "object",
+      "properties": {
+        "team1Name": {
+          "type": "string",
+          "description": "Name of the first team button."
+        },
+        "team2Name": {
+          "type": "string",
+          "description": "Name of the second team button."
+        }
+      },
+      "required": ["team1Name", "team2Name"]
+    }
+  },
+  "firestore": {
+    "/settings/{settingId}": {
+      "schema": {
+        "$ref": "#/entities/Settings"
+      },
+      "description": "Global settings documents."
+    },
+    "/games/{gameId}": {
+      "schema": {
+        "$ref": "#/entities/Game"
+      },
+      "description": "Collection of all games."
+    },
+    "/games/{gameId}/signups/{signupId}": {
+      "schema": {
+        "$ref": "#/entities/Signup"
+      },
+      "description": "Signups for a specific game."
+    }
+  }
+}
