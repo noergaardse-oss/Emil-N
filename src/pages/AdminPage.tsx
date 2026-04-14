@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot, deleteDoc, doc, setDoc } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
-import { User } from 'firebase/auth';
 import { format } from 'date-fns';
 import { da } from 'date-fns/locale';
 
@@ -13,7 +12,12 @@ interface Game {
   location: string;
 }
 
-export default function AdminPage({ user }: { user: User | null }) {
+interface CustomUser {
+  username: string;
+  isAdmin: boolean;
+}
+
+export default function AdminPage({ user }: { user: CustomUser | null }) {
   const [team, setTeam] = useState('Jyllandsserie');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
@@ -54,7 +58,7 @@ export default function AdminPage({ user }: { user: User | null }) {
     };
   }, []);
 
-  if (!user || user.email !== 'noergaard.se@gmail.com') {
+  if (!user || !user.isAdmin) {
     return (
       <div className="text-center py-12">
         <h2 className="text-2xl font-bold text-red-600">Adgang nægtet</h2>

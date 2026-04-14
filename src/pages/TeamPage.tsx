@@ -1,10 +1,9 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { collection, query, where, onSnapshot, orderBy, addDoc, serverTimestamp, doc, deleteDoc } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
 import { format } from 'date-fns';
 import { da } from 'date-fns/locale';
-import { User } from 'firebase/auth';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface Game {
@@ -23,7 +22,12 @@ interface Signup {
   comment?: string;
 }
 
-export default function TeamPage({ user }: { user: User | null }) {
+interface CustomUser {
+  username: string;
+  isAdmin: boolean;
+}
+
+export default function TeamPage({ user }: { user: CustomUser | null }) {
   const { teamId } = useParams<{ teamId: string }>();
   const teamName = teamId === 'jyllandsserie' ? 'Jyllandsserie' : '2.division';
   
@@ -108,7 +112,8 @@ function GameCard({
 }: { 
   game: Game, 
   playerName: string,
-  onNameChange: (name: string) => void
+  onNameChange: (name: string) => void,
+  key?: string
 }) {
   const [signups, setSignups] = useState<Signup[]>([]);
   const [comment, setComment] = useState('');
